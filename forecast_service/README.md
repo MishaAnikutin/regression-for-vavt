@@ -10,7 +10,7 @@ API Сервиса написана на FastAPI, запускается на 50
 docker build -t forecast_service:1.0 .
 ```
 
-### Запуск образа
+### Запуск контейнера
 ```cmd 
 docker run -p 5051:5051 -d -t forecast_service:1.0
 ```
