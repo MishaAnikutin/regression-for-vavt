@@ -4,7 +4,7 @@ from .catboost_dto import CatBoostHyperparameters
 from .general_dto import ConfidenceIntervalEnum
 
     
-class IPPFeatures(BaseModel):   
+class IPPFeatures(BaseModel):
     news:           list[float] = Field(None, description="Новостной индекс ЦБ")
     cb_monitor:     list[float] = Field(None, description="Промышленность. Как изменился спрос на продукцию, товары, услуги?") 
     bussines_clim:  list[float] = Field(None, description="Промышленность Индикатор бизнес-климата Банка России") 
