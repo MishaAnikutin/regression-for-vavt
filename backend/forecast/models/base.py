@@ -1,6 +1,7 @@
+from backend.forecast.datalake_service import DataLakeDTO
+
 from typing import List, Tuple, Any
 from abc import ABC, abstractmethod
-import numpy as np 
 
 
 class BaseForecast(ABC):
@@ -17,7 +18,7 @@ class BaseForecast(ABC):
         ... 
     
     @abstractmethod
-    def set_data(self, index_data: np.ndarray, feature_data: np.ndarray[np.ndarray[float]]) -> None:
+    def set_data(self, data: DataLakeDTO) -> None:
         ...
     
     @abstractmethod
