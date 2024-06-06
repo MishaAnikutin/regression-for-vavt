@@ -8,4 +8,5 @@ class FeatureRequest(BaseModel):
     )
 
 class FeatureResponse(BaseModel):
-    feature_names: list[str]
+    """Модель получения всех признаков для модели. Ответом будет словарь в формате признак: описание"""
+    feature_names: dict[str, str]

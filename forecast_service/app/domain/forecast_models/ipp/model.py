@@ -69,7 +69,7 @@ class IPPForecast(BaseForecast):
         ...
     
     def train(self):
-        ... 
+        print(1)
         
     def predict(self):
         return 1, 2, 3

@@ -16,7 +16,7 @@ class BaseForecast(ABC):
         ...
     
     @abstractmethod
-    def train_model(self) -> None:
+    def train(self) -> None:
         ...
     
     @abstractmethod
