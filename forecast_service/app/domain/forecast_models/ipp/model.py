@@ -32,13 +32,13 @@ class IPPForecast(BaseForecast):
     
     def __init__(self, hparams: dict[str, Union[FData, IData]]) -> None:
         # прогноз на 1 месяц 
-        self.__model_1 = CatBoostRegressor(**hparams, verbose = False) 
+        self.__model_1 = CatBoostRegressor(**hparams, verbose=False) 
         
         # прогноз на 2 месяца
-        self.__model_2 = CatBoostRegressor(**hparams, verbose = False) 
+        self.__model_2 = CatBoostRegressor(**hparams, verbose=False) 
         
         # прогноз на 3 месяца
-        self.__model_3 = CatBoostRegressor(**hparams, verbose = False)
+        self.__model_3 = CatBoostRegressor(**hparams, verbose=False)
 
     
     def set_data(
@@ -54,22 +54,27 @@ class IPPForecast(BaseForecast):
         ) -> None:
         
         self.goal = goal 
-        self.news = news
-        self.consumer_price = consumer_price
-        self.exchange_rate = exchange_rate
-        self.cb_monitor = cb_monitor
-        self.bussines_clim = bussines_clim 
-        self.curs = curs
-        self.rzd = rzd
         
+        self.features = {
+            "news": news,
+            "consumer_price": consumer_price,
+            "exchange_rate": exchange_rate,
+            "bussines_clim": bussines_clim,
+            "cb_monitor": cb_monitor,
+            "curs": curs,
+            "rzd": rzd
+        }
+                
         self._preprocess_features()
         
     def _preprocess_features(self):
         """Предобработка признаков. Создадим переменные с лагом"""
         ...
     
+    
     def train(self):
-        print(1)
-        
+        ...
+    
+                
     def predict(self):
         return 1, 2, 3

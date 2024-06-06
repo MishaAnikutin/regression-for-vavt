@@ -9,7 +9,19 @@ forecast_router = APIRouter()
 
 @forecast_router.post("/features_list")
 async def features_list(request: FeatureRequest) -> FeatureResponse:
-    """Получить список названий всех признаков необходимых для обучения модели"""
+    """
+    # Список признаков для индекса
+    
+    Получить список названий всех признаков необходимых для обучения модели
+    
+    ## Параметры:
+    -   __index_name:__ Название индекса (временного ряда) для которого хотите получить список признаков для модели
+    
+    ## Возвращает:
+    - __feature_names:__ Словарь имя-описание признаков. 
+    - __Status Code 422,__ если название индекса не было найдено (значит, для него нужно будет использовать стандартную модель)  
+    _Подробнее в описании DTO внизу страницы_
+    """
      
     index_name = request.index_name
     try:
@@ -20,17 +32,23 @@ async def features_list(request: FeatureRequest) -> FeatureResponse:
 
 @forecast_router.post("/ipp")
 async def ipp_forecast(request: IPPRequest) -> ForecastResponse:
-    """Прогнозирование индекса промышленного производства
-
-    Args:
-        request (IPPRequest): необходимые параметры для запроса
-
-    Returns:
-        ForecastResponse: прогноз на 1, 2 и 3 месяца
     """
+    # Прогнозирование индекса промышленного производства
     
-    print(dict(request.hparams))
+    ## Параметры:
+    - __hparams:__ гиперпараметры CatBoost
+    - __confidence_interval:__ доверительный интервал
+    - __goal:__ временной ряд индекса ИПП
+    - __features:__ список временных рядов признаков индекса
     
+    _Подробнее в описании DTO внизу страницы_
+
+    ## Возвращает:
+    ForecastResponse(month_1, month_2, month_3)
+    
+    _т.е. прогноз на 1, 2 и 3 месяца соответственно_
+    """
+        
     model = IPPForecast(dict(request.hparams))
     features = request.features
     
