@@ -1,33 +1,39 @@
 from fastapi import APIRouter, HTTPException
 
-from app.api.v1.schemas import (ForecastResponse, IPPRequest, FeatureRequest, FeatureResponse)
+from app.api.v1.schemas import (ForecastResponse, IPPRequest, IPPFeatures, FeatureRequest, FeatureResponse)
+
 from app.domain.forecast_models import IPPForecast
 from app.api.v1.mapping import FeatureMapper
 
 forecast_router = APIRouter()
 
 
-@forecast_router.post("/features_list")
-async def features_list(request: FeatureRequest) -> FeatureResponse:
+@forecast_router.post("/ipp/features_list")
+async def features_list() -> FeatureResponse:
     """
     # Список признаков для индекса
     
     Получить список названий всех признаков необходимых для обучения модели
     
-    ## Параметры:
-    -   __index_name:__ Название индекса (временного ряда) для которого хотите получить список признаков для модели
-    
-    ## Возвращает:
-    - __feature_names:__ Словарь имя-описание признаков. 
-    - __Status Code 422,__ если название индекса не было найдено (значит, для него нужно будет использовать стандартную модель)  
     _Подробнее в описании DTO внизу страницы_
     """
-     
-    index_name = request.index_name
-    try:
-        return FeatureResponse(feature_names=FeatureMapper[index_name])
-    except KeyError:
-        raise HTTPException(status_code=422, detail='Для этого индекса еще не определ список признаков')        
+
+    ipp_feature_keys = IPPFeatures.model_fields.keys()
+    
+    ipp_feature_desctiprion = list(
+        map(
+            lambda feature: feature.description,
+            IPPFeatures.model_fields.values()
+        )
+    )
+    
+    ipp_features = {
+        key: description
+        for key, description in
+        zip(ipp_feature_keys, ipp_feature_desctiprion)
+    }
+
+    return FeatureResponse(feature_names=ipp_features)
 
 
 @forecast_router.post("/ipp")
