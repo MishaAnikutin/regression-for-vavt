@@ -2,7 +2,8 @@
 
 API Сервиса написана на FastAPI, запускается на 5051 порте, Dockerfile тут же
 
-![alt text](image.png)
+
+![alt text](image-1.png)
 
 
 ### Создание образа
