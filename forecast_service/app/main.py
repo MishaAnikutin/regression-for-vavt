@@ -32,3 +32,5 @@ forecast_service.openapi_schema = get_openapi(
     routes  = forecast_service.routes,
     servers = [{'url': config.APP_NGINX_PREFIX}]
 )
+
+# uvicorn app.main:forecast_service --reload --host 0.0.0.0 --port 5051

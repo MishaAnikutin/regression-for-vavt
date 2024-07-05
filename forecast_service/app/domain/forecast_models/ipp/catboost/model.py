@@ -1,13 +1,18 @@
-from typing import Union, Callable
+from sklearn.metrics import mean_absolute_percentage_error, r2_score
 from catboost import CatBoostRegressor
+from typing import Union, Callable
+from functools import lru_cache
+from datetime import date
 import numpy as np
+import pandas as pd
 
 from app.domain.forecast_models import BaseForecast
-
+from app.api.v1.schemas.ipp_dto import TimeSeriesData
+from app.domain.data_preprocess import TimeSeries
+from app.domain.schemas.forecast_schema import ForecastDTO, ModelScoreDTO
 
 FData = list[float]
 IData = list[int]
-
 
 
 def print_result(func: Callable):
@@ -31,6 +36,7 @@ class IPPForecast(BaseForecast):
     """
     
     feature_lags = {
+        "ipp": 0,            # Индекс промышленного производства
         "news": 1,           # Новостной индекс ЦБ
         "consumer_price": 0, # Индекс цен на электроэнергию в первой ценовой зоне
         "interest_rate": 4,  # Ключевая ставка 
@@ -40,132 +46,135 @@ class IPPForecast(BaseForecast):
         "rzd": 1             # Поставки РЖД
     }
     
-    model_1_features = ('goal_lag_1', 'goal_lag_2', 'news_lag_1', 'news_lag_2', 'news_lag_3', 'cb_monitor_lag_2', 'bussines_clim_lag_1', 'rzd_lag_1', 'interest_rate_lag_4', 'consumer_price', 'curs', )        
-    model_2_features = ('goal_lag_2', 'news_lag_2', 'news_lag_3', 'news_lag_4', 'cb_monitor_lag_3', 'bussines_clim_lag_2', 'rzd_lag_2', 'interest_rate_lag_5', 'consumer_price_lag_1', 'curs_lag_1', )
-    model_3_features = ('goal_lag_3', 'news_lag_3', 'news_lag_4', 'news_lag_5', 'cb_monitor_lag_4', 'bussines_clim_lag_3', 'rzd_lag_3', 'interest_rate_lag_6', 'consumer_price_lag_2', 'curs_lag_2',)
+    # Дата начала отчета для данных 
+    date_start = date(year=2015, month=1, day=1)
     
-    # Сохранение предыдущих данных и гиперпараметров
-    prev_features = None
-    prev_args = None
-    prev_model_1 = None 
-    prev_model_2 = None 
-    prev_model_3 = None 
-
+    model_1_features = ('ipp_lag_1', 'ipp_lag_2', 'news_lag_1', 'news_lag_2', 'news_lag_3', 'cb_monitor_lag_2', 'bussines_clim_lag_1', 'rzd_lag_1', 'interest_rate_lag_4', 'consumer_price', 'curs', )        
+    model_2_features = ('ipp_lag_2', 'news_lag_2', 'news_lag_3', 'news_lag_4', 'cb_monitor_lag_3', 'bussines_clim_lag_2', 'rzd_lag_2', 'interest_rate_lag_5', 'consumer_price_lag_1', 'curs_lag_1', )
+    model_3_features = ('ipp_lag_3', 'news_lag_3', 'news_lag_4', 'news_lag_5', 'cb_monitor_lag_4', 'bussines_clim_lag_3', 'rzd_lag_3', 'interest_rate_lag_6', 'consumer_price_lag_2', 'curs_lag_2',)
     
     def __init__(self, hparams: dict[str, Union[FData, IData]]) -> None:
-        self.args = hparams
+        self._args = hparams
         
-        # прогноз на 1 месяц 
-        self.__model_1 = CatBoostRegressor(**hparams, verbose=False) 
+        self._model_1 = CatBoostRegressor(**hparams, verbose=False) # прогноз на 1 месяц 
+        self._model_2 = CatBoostRegressor(**hparams, verbose=False) # прогноз на 2 месяца
+        self._model_3 = CatBoostRegressor(**hparams, verbose=False) # прогноз на 3 месяца
         
-        # прогноз на 2 месяца
-        self.__model_2 = CatBoostRegressor(**hparams, verbose=False) 
-        
-        # прогноз на 3 месяца
-        self.__model_3 = CatBoostRegressor(**hparams, verbose=False)
+        self.df = None
 
     
     def set_data(
             self,
-            goal: FData,
-            news: FData, 
-            consumer_price: FData,
-            exchange_rate: FData,
-            cb_monitor: FData,
-            bussines_clim: FData,
-            curs: FData,
-            rzd: FData
-        ) -> None:
-        
-        self.goal = np.array(goal)
-        
-        self.features = {
-            "news": news,
-            "consumer_price": consumer_price,
-            "interest_rate": exchange_rate,
-            "bussines_clim": bussines_clim,
-            "cb_monitor": cb_monitor,
-            "curs": curs,
-            "rzd": rzd
+            ipp:            TimeSeriesData, 
+            news:           TimeSeriesData,
+            consumer_price: TimeSeriesData,
+            interest_rate:  TimeSeriesData,
+            cb_monitor:     TimeSeriesData,
+            bussines_clim:  TimeSeriesData,
+            curs:           TimeSeriesData,
+            rzd:            TimeSeriesData
+        ) -> "IPPForecast":
+                
+        self._raw_data = {
+            "ipp":            TimeSeries(ipp.values, ipp.dates),
+            "news":           TimeSeries(news.values, news.dates),
+            "consumer_price": TimeSeries(consumer_price.values, consumer_price.dates),
+            "interest_rate":  TimeSeries(interest_rate.values, interest_rate.dates),
+            "cb_monitor":     TimeSeries(cb_monitor.values, cb_monitor.dates),
+            "bussines_clim":  TimeSeries(bussines_clim.values, bussines_clim.dates),
+            "curs":           TimeSeries(curs.values, curs.dates),
+            "rzd":            TimeSeries(rzd.values, rzd.dates)
         }
                 
-        self._preprocess_features()
+        day, month, year = map(int, ipp.dates[-1].split('.'))
+        self.date_end = date(day=day, month=month, year=year)
+        
+        return self 
                 
-    def _preprocess_features(self):
+    def preprocess_features(self) -> "IPPForecast":
         """Предобработка признаков. Создадим переменные с лагом"""
+
+        self._raw_data['curs'] = self._raw_data['curs'].days_to_months()
+                        
+        self.df = pd.DataFrame({'date': []})
         
-        self.features = {key: np.array(data) for key, data in self.features.items()}
-        features_with_lag = dict()
+        for feature, columns in self._raw_data.items():
+            feature_df = pd.DataFrame({'date': columns.dates, feature: columns.values})
+            
+            # приводим все даты к формату: ГОД-МЕСЯЦ-1 , чтобы их обьеденить по дате верно
+            feature_df.date = feature_df.date.apply(
+                lambda x: date(
+                    year  = int(x.split('.')[2]),
+                    month = int(x.split('.')[1]),
+                    day   = 1
+                )
+            )
+            
+            self.df = self.df.merge(feature_df, on='date', how='outer')
         
+        self.df.date = pd.to_datetime(self.df.date, format='%d.%m.%Y').dt.date
+
+        # столбцы динамически меняются, поэтому сохраняем и приводим к неизменяемому типу
+        features = tuple(self.df.columns)
+
         for i in range(6):
-            for feature in self.features.keys():
-                lag = self.feature_lags[feature]
-                data = self.features[feature]
-                
-                features_with_lag[f'{feature}_lag_{i + lag}'] = self.shift(data, i)
+            for feature in features:
+                lag = self.feature_lags.get(feature, 0)
+                                
+                self.df[f'{feature}_lag_{i + lag}'] = self.df[feature].shift(i + lag)
 
-        features_with_lag['goal_lag_1'] = self.shift(self.goal, 1) ** 2
-        features_with_lag['goal_lag_2'] = self.shift(self.goal, 2) ** 2
-        features_with_lag['goal_lag_3'] = self.shift(self.goal, 3) ** 2
-
-        self.goal_lag_1 = features_with_lag['goal_lag_1']
-        self.goal_lag_2 = features_with_lag['goal_lag_2']
-        self.goal_lag_3 = features_with_lag['goal_lag_3']
+        self.df['ipp_lag_1'] = self.df['ipp_lag_1'] ** 2
+        self.df['ipp_lag_2'] = self.df['ipp_lag_2'] ** 2
+        self.df['ipp_lag_3'] = self.df['ipp_lag_3'] ** 2
         
-        self.features = dict(list(features_with_lag.items()) + list(self.features.items()))
+        
+        self.df = self.df\
+            [~pd.isna(self.df.ipp)]\
+            .sort_values(by='date')\
+            .interpolate(method='linear')\
+            .dropna()
+        
 
+                
+        return self
+    
+    
+    def _features_filter(self, model_features: tuple):
+        return self.df.loc[:, [*model_features]]
+
+    @lru_cache(maxsize=8)
+    def train(self) -> "IPPForecast":
+        self._model_1.fit(X=self._features_filter(self.model_1_features), y=self.df['ipp'])
+        self._model_2.fit(X=self._features_filter(self.model_2_features), y=self.df['ipp_lag_1'])        
+        self._model_3.fit(X=self._features_filter(self.model_3_features), y=self.df['ipp_lag_2'])
+        
+        return self
+    
     @staticmethod
-    def shift(data: list, i: int) -> np.ndarray:
-        """Сдвигает на i единиц элементы в списке 
-        
-        при i = 2: [1, 2, 3, 4, 5, 6] -> [1, 1, 1, 2, 3, 4]
-        
-        nan заполняется еще последним значением
+    def _score(model, x, y) -> ModelScoreDTO:
+        predict = model.predict(x)
 
-        Args:
-            data (list): список данных
-            i (int): размер сдвига
-        """
+        return ModelScoreDTO(
+            mape      = mean_absolute_percentage_error(y,predict),
+            r2_score  = r2_score(y, predict)
+        )
         
-        if i == 0:
-            return data
-        return np.concatenate((np.full(i, data[0]), data[:-i]))
-    
-    def _filter_data(self, model_features: tuple):
-        return np.array([self.features[key] for key in model_features]).transpose()
+    def predict(self) -> ForecastDTO:
+        # Берем самые последние данные, получаем предсказание и score для каждой модели
+        
+        data = self._features_filter(self.model_1_features).iloc[-1, ]
 
-    
-    def train(self):
-        if self.prev_features == self.features and self.prev_args == self.args:
-            # TODO: так не работает
-            return self._set_models_from_cache() 
+        month_1 = self._model_1.predict(data)
+        month_2 = self._model_2.predict(data) ** 0.5
+        month_3 = self._model_3.predict(data) ** 0.5
         
-        self.__model_1.fit(X=self._filter_data(self.model_1_features), y=self.goal)
-        self.__model_2.fit(X=self._filter_data(self.model_2_features), y=self.goal_lag_1)        
-        self.__model_3.fit(X=self._filter_data(self.model_3_features), y=self.goal_lag_2)    
-        
-        self._cache_args_and_features()
-        self._cache_models()
-        
-    def _cache_args_and_features(self, cache={}):
-        self.prev_args = {k: v for k, v in self.args.items()}
-        self.prev_features = {k: v for k, v in  self.features.items()}
-    
-    def _cache_models(self):
-        self.prev_model_1 = self.__model_1
-        self.prev_model_2 = self.__model_2
-        self.prev_model_3 = self.__model_3
-        
-    def _set_models_from_cache(self):
-        self.__model_1 = self.prev_model_1
-        self.__model_2 = self.prev_model_2
-        self.__model_3 = self.prev_model_3
+        score_1 = self._score(self._model_1, self._features_filter(self.model_1_features), self.df.ipp)
+        score_2 = self._score(self._model_2, self._features_filter(self.model_2_features), self.df.ipp_lag_1)
+        score_3 = self._score(self._model_3, self._features_filter(self.model_3_features), self.df.ipp_lag_2)
 
-    def predict(self):
-        data = self._filter_data(self.model_1_features)[-1]
-                
-        predict_1 = self.__model_1.predict(data)
-        predict_2 = self.__model_2.predict(data) ** 0.5
-        predict_3 = self.__model_3.predict(data) ** 0.5
-                
-        return predict_1, predict_2, predict_3
+        return ForecastDTO(
+            month_1=month_1,
+            month_2=month_2,
+            month_3=month_3,
+            scores=[score_1, score_2, score_3]
+        )

@@ -9,5 +9,5 @@ APP_CORS_ORIGINS_LIST = os.getenv(
 
 APP_NGINX_PREFIX = os.getenv(
     'APP_NGINX_PREFIX',
-    default="/forecast/api"    
+    default="/forecast/api"
 )

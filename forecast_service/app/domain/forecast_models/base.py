@@ -12,11 +12,15 @@ class BaseForecast(ABC):
         ...
         
     @abstractmethod
-    def set_data(self) -> None:
+    def set_data(self) -> "BaseForecast":
         ...
     
     @abstractmethod
-    def train(self) -> None:
+    def preprocess_features(self) -> "BaseForecast":
+        ...
+    
+    @abstractmethod
+    def train(self) -> "BaseForecast":
         ...
     
     @abstractmethod

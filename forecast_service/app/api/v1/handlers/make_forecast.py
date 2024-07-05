@@ -20,7 +20,9 @@ forecast_router = APIRouter()
 @forecast_router.get("/ipp/features_list")
 async def features_list() -> FeatureResponse:
     """
-    # Список признаков для индекса
+    # Список признаков для прогноза индекса промышленного производства, Россия: ежемесячные данные в % к соответствующему периоду предыдущего года
+    
+    __dataset_uuid = c1c92863-1827-405e-b3e4-dea782f57316__
     
     Получить список названий всех признаков необходимых для обучения модели
     
@@ -29,8 +31,8 @@ async def features_list() -> FeatureResponse:
             
     return FeatureResponse(
         features = {
-            "news":           Feature(description="Новостной идекс ЦБ, Россия", dataset_uuid="423f7092-d29b-43da-8209-f100c1fc88cd"),
-            "cb_monitor":     Feature(description="Промышленность. Как изменился спрос на продукцию, товары, услуги?", dataset_uuid="7d38c0d5-6bae-4856-b92c-9858223cfa89"),
+            "news":           Feature(description="Новостной индекс ЦБ, Россия", dataset_uuid="423f7092-d29b-43da-8209-f100c1fc88cd"),
+            "cb_monitor":     Feature(description="Оценка изменения спроса на продукцию, товары, услуги (промышленность), пункты, Россия", dataset_uuid="7d38c0d5-6bae-4856-b92c-9858223cfa89"),
             "bussines_clim":  Feature(description="Индикатор бизнес-климата ЦБ (промышленность), пункты, Россия", dataset_uuid="14c74eba-c1a7-4aff-a1e3-0aa473ce8062"),
             "interest_rate":  Feature(description="Базовая ставка - краткосрочная, %, Россия", dataset_uuid="87d93650-33f7-44b2-96df-6d520fa76c12"),
             "rzd":            Feature(description="Погрузка на сети РЖД, млн тонн, Россия", dataset_uuid="61265b19-7635-449c-9538-b45e078fb5e9"),
@@ -54,57 +56,31 @@ async def cb_ipp_forecast(request: IPPRequestCB) -> ForecastResponse:
     _Подробнее в описании DTO внизу страницы_
 
     ## Возвращает:
-    ForecastResponse(month_1, month_2, month_3)
+    ForecastResponse(responses: tuple[float])
     
-    _т.е. прогноз на 1, 2 и 3 месяца соответственно_
+    _т.е. прогноз на следующие 3 месяца_
     """
-        
-    model = catboost.IPPForecast(dict(request.hparams))
-    features = request.features
-        
-    values = [*dict(features).values(), list(request.ipp)]
     
-    if any(map(lambda f: len(f) < 6, values)):
-        raise HTTPException(status_code=400, detail="Неверные данные. Данных меньше, чем на 6 месяцев, модель невозможно обучить")
+    result = catboost\
+        .IPPForecast(dict(request.hparams))\
+        .set_data(
+            ipp            = request.ipp,
+            rzd            = request.features.rzd,
+            news           = request.features.news,
+            curs           = request.features.curs,
+            cb_monitor     = request.features.cb_monitor,
+            interest_rate  = request.features.interest_rate,
+            bussines_clim  = request.features.bussines_clim,
+            consumer_price = request.features.consumer_price
+        )\
+        .preprocess_features()\
+        .train()\
+        .predict()
     
-    model.set_data(
-        goal=request.ipp, news=features.news, consumer_price=features.consumer_price,
-        cb_monitor=features.cb_monitor, exchange_rate=features.interest_rate, 
-        bussines_clim=features.bussines_clim, curs=features.curs, rzd=features.rzd 
+    return ForecastResponse(
+        month_1 = result.month_1,
+        month_2 = result.month_2,
+        month_3 = result.month_3,
+        scores  = result.scores
     )
-    
-    try:
-        model.train()
-        forecast = model.predict()
-    
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Ошибка обучения модели: {exc}")
-    
-    forecast_response = ForecastResponse(month_1=forecast[0], month_2=forecast[1], month_3=forecast[2])
-    
-    return forecast_response
 
-
-# @forecast_router.post("/ipp/rnn")
-# async def rnn_ipp_forecast(request: IPPRequestRNN) -> ForecastResponse:
-#     """
-#     # БУДЕТ ГОТОВ В БУДУЩЕМ
-
-#     # Прогнозирование индекса промышленного производства рекурентной нейронной сетью
-    
-#     ## Параметры:
-#     - __hparams:__ гиперпараметры RNN
-#     - __confidence_interval:__ доверительный интервал
-#     - __goal:__ временной ряд индекса ИПП
-#     - __features:__ список временных рядов признаков индекса
-    
-#     _Подробнее в описании DTO внизу страницы_
-
-#     ## Возвращает:
-#     ForecastResponse(month_1, month_2, month_3)
-    
-#     _т.е. прогноз на 1, 2 и 3 месяца соответственно_
-#     """
-    
-#     # Not implemented
-#     raise HTTPException(status_code=501)

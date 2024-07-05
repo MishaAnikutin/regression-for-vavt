@@ -1,6 +1,6 @@
 from .ipp_dto import (IPPRequestCB, IPPRequestRNN, IPPFeatures)
 from .general_dto import ForecastResponse
-from .feature_dto import FeatureRequest, FeatureResponse 
+from .feature_dto import FeatureRequest, FeatureResponse , Feature
 from .catboost_dto import CatBoostHyperparameters
 
 
@@ -11,5 +11,6 @@ __all__  = [
     'CatBoostHyperparameters',
     'IPPRequestCB',
     'IPPRequestRNN',
-    'IPPFeatures'
+    'IPPFeatures',
+    'Feature'
 ]
