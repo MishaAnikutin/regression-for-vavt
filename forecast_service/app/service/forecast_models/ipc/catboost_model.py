@@ -1,21 +1,19 @@
 import pandas as pd
 from datetime import date
 from functools import lru_cache
+
 from catboost import CatBoostRegressor
 from sklearn.metrics import mean_absolute_percentage_error, r2_score
 
 from app.service.data_preprocess import TimeSeries
 from app.domain.forecast_interface import BaseForecast
+
 from app.schemas import Feature, ForecastResponse, ModelScore, CatBoostHyperparameters
 
 
-FData = list[float]
-IData = list[int]
-
-
-class IPPForecast(BaseForecast):
+class IPCForecast(BaseForecast):
     """
-    Модель прогноза Индекса промышленного производства на CatBoost
+    Модель прогноза Индекса потребительских цен на CatBoost
 
     При предобработке данных, разные признаки мы будем сдвигать по определенному лагу
 
@@ -26,7 +24,7 @@ class IPPForecast(BaseForecast):
     """
 
     feature_lags = {
-        "ipp": 0,             # Индекс промышленного производства
+        "ipc": 0,             # Индекс потребительских цен
         "news": 1,            # Новостной индекс ЦБ
         "consumer_price": 0,  # Индекс цен на электроэнергию в первой ценовой зоне
         "interest_rate": 4,   # Ключевая ставка
@@ -40,25 +38,27 @@ class IPPForecast(BaseForecast):
     date_start = date(year=2015, month=1, day=1)
 
     model_1_features = (
-        'ipp_lag_1', 'ipp_lag_2', 'news_lag_1', 'news_lag_2', 'news_lag_3', 'cb_monitor_lag_2', 'bussines_clim_lag_1',
+        'ipc_lag_1', 'ipc_lag_2', 'news_lag_1', 'news_lag_2', 'news_lag_3', 'cb_monitor_lag_2', 'bussines_clim_lag_1',
         'rzd_lag_1', 'interest_rate_lag_4', 'consumer_price', 'curs',
     )
 
     model_2_features = (
-        'ipp_lag_2', 'news_lag_2', 'news_lag_3', 'news_lag_4', 'cb_monitor_lag_3', 'bussines_clim_lag_2', 'rzd_lag_2',
+        'ipc_lag_2', 'news_lag_2', 'news_lag_3', 'news_lag_4', 'cb_monitor_lag_3', 'bussines_clim_lag_2', 'rzd_lag_2',
         'interest_rate_lag_5', 'consumer_price_lag_1', 'curs_lag_1',
     )
 
     model_3_features = (
-        'ipp_lag_3', 'news_lag_3', 'news_lag_4', 'news_lag_5', 'cb_monitor_lag_4', 'bussines_clim_lag_3', 'rzd_lag_3',
+        'ipc_lag_3', 'news_lag_3', 'news_lag_4', 'news_lag_5', 'cb_monitor_lag_4', 'bussines_clim_lag_3', 'rzd_lag_3',
         'interest_rate_lag_6', 'consumer_price_lag_2', 'curs_lag_2',
     )
 
     def __init__(
             self,
             hparams: CatBoostHyperparameters,
+            raw_data: dict[str, TimeSeries] = None,
     ):
         "Конструктор класса. Класс будет неизменяемым, поэтому все признаки пересоздаются"
+
         self._hparams = dict(hparams)
 
         self._model_1 = CatBoostRegressor(**self._hparams, verbose=False)
@@ -71,7 +71,7 @@ class IPPForecast(BaseForecast):
 
     def set_data(
             self,
-            ipp: Feature,
+            ipc: Feature,
             news: Feature,
             consumer_price: Feature,
             interest_rate: Feature,
@@ -79,26 +79,25 @@ class IPPForecast(BaseForecast):
             business_clim: Feature,
             curs: Feature,
             rzd: Feature
-    ) -> "IPPForecast":
+    ) -> "IPCForecast":
 
-        raw_data = {
-            "ipp": TimeSeries(ipp.values, ipp.dates),
+        self._raw_data = {
+            "ipc": TimeSeries(ipc.values, ipc.dates),
             "news": TimeSeries(news.values, news.dates),
             "consumer_price": TimeSeries(consumer_price.values, consumer_price.dates),
             "interest_rate": TimeSeries(interest_rate.values, interest_rate.dates),
             "cb_monitor": TimeSeries(cb_monitor.values, cb_monitor.dates),
-            "business_clim": TimeSeries(bussines_clim.values, bussines_clim.dates),
+            "business_clim": TimeSeries(business_clim.values, business_clim.dates),
             "curs": TimeSeries(curs.values, curs.dates),
             "rzd": TimeSeries(rzd.values, rzd.dates)
         }
 
-        #
-        day, month, year = map(int, ipp.dates[0].split('.'))
+        day, month, year = map(int, ipc.dates[0].split('.'))
         self.date_end = date(day=day, month=month, year=year)
 
         return self
 
-    def preprocess_features(self) -> "IPPForecast":
+    def preprocess_features(self) -> "IPCForecast":
         """Предобработка признаков. Создадим переменные с лагом"""
 
         _raw_data = {k: v for k, v in self._raw_data.items()}
@@ -131,23 +130,19 @@ class IPPForecast(BaseForecast):
 
                 df[f'{feature}_lag_{i + lag}'] = df[feature].shift(i + lag)
 
-        df['ipp_lag_1'] = df['ipp_lag_1'] ** 2
-        df['ipp_lag_2'] = df['ipp_lag_2'] ** 2
-        df['ipp_lag_3'] = df['ipp_lag_3'] ** 2
+        df['ipc_lag_1'] = df['ipc_lag_1'] ** 2
+        df['ipc_lag_2'] = df['ipc_lag_2'] ** 2
+        df['ipc_lag_3'] = df['ipc_lag_3'] ** 2
 
-        df = df \
-            [~pd.isna(df.ipp)] \
+        self._df = df[~pd.isna(df.ipc)] \
             .sort_values(by='date') \
             .interpolate(method='linear') \
             .dropna()
 
-        return IPPForecast(
-            hparams=self._args, model_1=self._model_1, model_2=self._model_2, model_3=self._model_3,
-            date_end=self.date_end, raw_data=_raw_data, df=df
-        )
+        return self
 
     def _features_filter(self, model_features: tuple):
-        return self.df.loc[:, [*model_features]]
+        return self._df.loc[:, [*model_features]]
 
     @staticmethod
     @lru_cache(maxsize=8)
@@ -156,15 +151,12 @@ class IPPForecast(BaseForecast):
         
         return model
     
-    def train(self) -> "IPPForecast":
-        model_1 = self._train(self._model_1, X=self._features_filter(self.model_1_features), y=self.df['ipp'])
-        model_2 = self._train(self._model_2, X=self._features_filter(self.model_2_features), y=self.df['ipp_lag_1'])
-        model_3 = self._train(self._model_3, X=self._features_filter(self.model_3_features), y=self.df['ipp_lag_2'])
+    def train(self) -> "IPCForecast":
+        self._model_1 = self._train(self._model_1, X=self._features_filter(self.model_1_features), y=self._df.ipc)
+        self._model_2 = self._train(self._model_2, X=self._features_filter(self.model_2_features), y=self._df.ipc_lag_1)
+        self._model_3 = self._train(self._model_3, X=self._features_filter(self.model_3_features), y=self._df.ipc_lag_2)
 
-        return IPPForecast(
-            hparams=self._args, model_1=model_1, model_2=model_2, model_3=model_3,
-            df=self.df, date_end=self.date_end, raw_data=self._raw_data
-        )
+        return self
 
     @staticmethod
     def _score(model, x, y) -> ModelScore:
@@ -176,22 +168,21 @@ class IPPForecast(BaseForecast):
         )
 
     @staticmethod
-    @lru_cache(maxsize=8)
     def _predict(model, data):
         return model.predict(data)
 
     def predict(self) -> ForecastResponse:
         # Берем самые последние данные, получаем предсказание и score для каждой модели
 
-        data = self._features_filter(self.model_1_features).iloc[-1,]
+        data = self._features_filter(self.model_1_features).iloc[-1, ]
 
         month_1 = self._predict(self._model_1, data)
         month_2 = self._predict(self._model_2, data) ** 0.5
         month_3 = self._predict(self._model_3, data) ** 0.5
 
-        score_1 = self._score(self._model_1, self._features_filter(self.model_1_features), self.df.ipp)
-        score_2 = self._score(self._model_2, self._features_filter(self.model_2_features), self.df.ipp_lag_1)
-        score_3 = self._score(self._model_3, self._features_filter(self.model_3_features), self.df.ipp_lag_2)
+        score_1 = self._score(self._model_1, self._features_filter(self.model_1_features), self._df.ipc)
+        score_2 = self._score(self._model_2, self._features_filter(self.model_2_features), self._df.ipc_lag_1)
+        score_3 = self._score(self._model_3, self._features_filter(self.model_3_features), self._df.ipc_lag_2)
 
         return ForecastResponse(
             month_1=month_1,

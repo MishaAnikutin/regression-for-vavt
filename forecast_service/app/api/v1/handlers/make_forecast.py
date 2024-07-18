@@ -1,54 +1,40 @@
 from fastapi import APIRouter, HTTPException
 
-from app.service.forecast_models.ipp import catboost_model
-from app.service.forecast_models.base_forecast_model import BaseForecastService 
+from app.service.forecast_models import IPCForecast, IPPForecast, BaseForecastService
 
 from app.schemas import (
+    IndexFeaturesMapper,
     ForecastResponse,
-    FeatureResponse,
+    FeaturesResponse,
     IPPRequestCB,
     BaseRequest,
-    Feature
+    ReadyOnModels
 )
 
 
 forecast_router = APIRouter()
 
 
-@forecast_router.get("/ipp/features_list")
-async def features_list() -> FeatureResponse:
-    """
-    # Список признаков для прогноза индекса промышленного производства, Россия: ежемесячные данные в % к соответствующему периоду предыдущего года
-    
-    __dataset_uuid = c1c92863-1827-405e-b3e4-dea782f57316__
-    
-    Получить список названий всех признаков необходимых для обучения модели
-    
-    _Подробнее в описании DTO внизу страницы_
-    """
-            
-    return FeatureResponse(
-        features = {
-            "news":           Feature(description="Новостной индекс ЦБ, Россия", dataset_uuid="423f7092-d29b-43da-8209-f100c1fc88cd"),
-            "cb_monitor":     Feature(description="Оценка изменения спроса на продукцию, товары, услуги (промышленность), пункты, Россия", dataset_uuid="7d38c0d5-6bae-4856-b92c-9858223cfa89"),
-            "business_clim":  Feature(description="Индикатор бизнес-климата ЦБ (промышленность), пункты, Россия", dataset_uuid="14c74eba-c1a7-4aff-a1e3-0aa473ce8062"),
-            "interest_rate":  Feature(description="Базовая ставка - краткосрочная, %, Россия", dataset_uuid="87d93650-33f7-44b2-96df-6d520fa76c12"),
-            "rzd":            Feature(description="Погрузка на сети РЖД, млн тонн, Россия", dataset_uuid="61265b19-7635-449c-9538-b45e078fb5e9"),
-            "consumer_price": Feature(description="Индекс цен на электроэнергию в первой ценовой зоне, рублей за МВт/ч, Россия", dataset_uuid="f0873ac7-c29f-481b-8f47-e11c7b1b7c82"),
-            "curs":           Feature(description="Официальный курс доллара США на заданную дату, устанавливаемый ежедневно", dataset_uuid="5e5ac82a-ab76-4567-b095-92f8064acb51")
-        }
-    )
+@forecast_router.get("/{index}/features_list")
+async def features_list(index: ReadyOnModels) -> FeaturesResponse:
+    """# Получить список названий всех признаков необходимых для обучения модели"""
 
-@forecast_router.post("/")
+    try:
+        return IndexFeaturesMapper[index]
+    except KeyError:
+        raise HTTPException(status_code=404, detail='Такого индекса нет')
+
+
+@forecast_router.post("/base")
 async def base_forecast(request: BaseRequest) -> ForecastResponse:
     """# Базовая модель для прогноза"""
-                    
-    return BaseForecastService(request.hparams)\
-            .set_data(request.target)\
-            .preprocess_features()\
-            .train()\
-            .predict()
-    
+
+    return BaseForecastService(request.hparams) \
+        .set_data(request.target) \
+        .preprocess_features() \
+        .train() \
+        .predict()
+
 
 @forecast_router.post("/ipp/catboost")
 async def cb_ipp_forecast(request: IPPRequestCB) -> ForecastResponse:
@@ -68,20 +54,53 @@ async def cb_ipp_forecast(request: IPPRequestCB) -> ForecastResponse:
     
     _т.е. прогноз на следующие 3 месяца_
     """
-    
-    return catboost_model\
-        .IPPForecast(request.hparams)\
+
+    return IPPForecast(request.hparams) \
         .set_data(
-            ipp            = request.ipp,
-            rzd            = request.features.rzd,
-            news           = request.features.news,
-            curs           = request.features.curs,
-            cb_monitor     = request.features.cb_monitor,
-            interest_rate  = request.features.interest_rate,
-            bussines_clim  = request.features.business_clim,
-            consumer_price = request.features.consumer_price
-        )\
-        .preprocess_features()\
-        .train()\
+            ipp=request.ipp,
+            rzd=request.features.rzd,
+            news=request.features.news,
+            curs=request.features.curs,
+            cb_monitor=request.features.cb_monitor,
+            interest_rate=request.features.interest_rate,
+            business_clim=request.features.business_clim,
+            consumer_price=request.features.consumer_price
+        ) \
+        .preprocess_features() \
+        .train() \
         .predict()
-        
+
+
+@forecast_router.post("/ipc/catboost")
+async def cb_ipc_forecast(request: IPPRequestCB) -> ForecastResponse:
+    """
+    # Прогнозирование индекса потребительских цен с CatBoost
+
+    ## Параметры:
+    - __hparams:__ гиперпараметры CatBoost
+    - __confidence_interval:__ доверительный интервал
+    - __goal:__ временной ряд индекса ИПП
+    - __features:__ список временных рядов признаков индекса
+
+    _Подробнее в описании DTO внизу страницы_
+
+    ## Возвращает:
+    ForecastResponse(responses: tuple[float])
+
+    _т.е. прогноз на следующие 3 месяца_
+    """
+
+    return IPCForecast(request.hparams) \
+        .set_data(
+            ipc=request.ipp,
+            rzd=request.features.rzd,
+            news=request.features.news,
+            curs=request.features.curs,
+            cb_monitor=request.features.cb_monitor,
+            interest_rate=request.features.interest_rate,
+            business_clim=request.features.business_clim,
+            consumer_price=request.features.consumer_price
+        ) \
+        .preprocess_features() \
+        .train() \
+        .predict()

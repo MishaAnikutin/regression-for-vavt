@@ -30,31 +30,26 @@ class IPPRequestCB(BaseModel):
 
     Параметры:
     - hparams:             гиперпараметры CatBoost
-    - confidence_interval: доверительный интервал
-    - goal:                временной ряд индекса, который предсказываем
+    - ipp:                 временной ряд индекса, который предсказываем (ИПП)
     - features:            временной ряд признаков индекса
     """
 
     hparams: CatBoostHyperparameters
-    confidence_interval: ConfidenceIntervalEnum
-
     ipp: Feature = Field(None, description="Индекс промышленного производства")
     features: IPPFeatures
 
 
-class IPPRequestRNN(BaseModel):
+class IPCRequestCB(BaseModel):
     """
-    DTO для запроса на прогноз индекса промышленного производства производства по рекурентной нейронной сети
+    DTO для запроса на прогноз индекса потребительских цен на CatBoost Regressor
 
     Параметры:
-    - hparams:             гиперпараметры RNN
-    - confidence_interval: доверительный интервал
-    - goal:                временной ряд индекса, который предсказываем
-    - features:            временной ряд признаков индекса
+    - hparams:             гиперпараметры CatBoost
+    - ipc:                 временной ряд индекса, который предсказываем (ИПЦ)
+    - features:            временные ряды признаков индекса
     """
 
-    hparams: RNNHyperparameters
-    confidence_interval: ConfidenceIntervalEnum
-
-    ipp: Feature = Field(None, description="Индекс промышленного производства")
+    hparams: CatBoostHyperparameters
+    ipc: Feature = Field(None, description="Индекс потребительских цен")
     features: IPPFeatures
+

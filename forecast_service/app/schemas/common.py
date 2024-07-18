@@ -8,3 +8,11 @@ class ConfidenceIntervalEnum(str, Enum):
     medium = '95%'
     hight = '99%'
 
+
+class ReadyOnModels(str, Enum):
+    """Индексы для которых готовы модели машинного обучения"""
+
+    ipp = 'ipp'
+    ipc = 'ipc'
+
+

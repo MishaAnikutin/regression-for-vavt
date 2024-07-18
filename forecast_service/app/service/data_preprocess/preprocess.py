@@ -16,12 +16,7 @@ class TimeSeries:
 
     def __post_init__(self):
         if len(self.values) != len(self.dates):
-            raise ValueError(
-                f'''
-                value и dates Должны быть одной длины,
-                но имеем: {len(self.dates) =}, {len(self.values) =}
-                '''
-            )
+            raise ValueError(f'value и dates Должны быть одной длины, но имеем: {len(self.dates) =}, {len(self.values) =}')
 
     def _create_df(self):
         tmp = pd.DataFrame({"date": self.dates, "value": self.values})
@@ -34,7 +29,7 @@ class TimeSeries:
             )
         )
 
-        return tmp
+        return tmp.sort_values(by='date')
 
     def days_to_months(self, method='mean') -> 'TimeSeries':
         """
@@ -44,7 +39,7 @@ class TimeSeries:
 
         tmp = self._create_df()
 
-        tmp['month-date'] = tmp.date.apply(lambda date: f'01.{date.month:02}.{date.year}')
+        tmp['month-date'] = tmp.date.apply(lambda d: date(day=1, month=d.month, year=d.year))
 
         tmp = tmp.groupby('month-date', as_index=False).agg({'value': method})
 
