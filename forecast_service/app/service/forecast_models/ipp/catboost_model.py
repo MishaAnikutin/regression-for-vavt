@@ -1,3 +1,5 @@
+import datetime
+
 import pandas as pd
 from datetime import date
 from functools import lru_cache
@@ -40,17 +42,17 @@ class IPPForecast(BaseForecast):
     date_start = date(year=2015, month=1, day=1)
 
     model_1_features = (
-        'ipp_lag_1', 'ipp_lag_2', 'news_lag_1', 'news_lag_2', 'news_lag_3', 'cb_monitor_lag_2', 'bussines_clim_lag_1',
+        'ipp_lag_1', 'ipp_lag_2', 'news_lag_1', 'news_lag_2', 'news_lag_3', 'cb_monitor_lag_2', 'business_clim_lag_1',
         'rzd_lag_1', 'interest_rate_lag_4', 'consumer_price', 'curs',
     )
 
     model_2_features = (
-        'ipp_lag_2', 'news_lag_2', 'news_lag_3', 'news_lag_4', 'cb_monitor_lag_3', 'bussines_clim_lag_2', 'rzd_lag_2',
+        'ipp_lag_2', 'news_lag_2', 'news_lag_3', 'news_lag_4', 'cb_monitor_lag_3', 'business_clim_lag_2', 'rzd_lag_2',
         'interest_rate_lag_5', 'consumer_price_lag_1', 'curs_lag_1',
     )
 
     model_3_features = (
-        'ipp_lag_3', 'news_lag_3', 'news_lag_4', 'news_lag_5', 'cb_monitor_lag_4', 'bussines_clim_lag_3', 'rzd_lag_3',
+        'ipp_lag_3', 'news_lag_3', 'news_lag_4', 'news_lag_5', 'cb_monitor_lag_4', 'business_clim_lag_3', 'rzd_lag_3',
         'interest_rate_lag_6', 'consumer_price_lag_2', 'curs_lag_2',
     )
 
@@ -81,13 +83,13 @@ class IPPForecast(BaseForecast):
             rzd: Feature
     ) -> "IPPForecast":
 
-        raw_data = {
+        self._raw_data = {
             "ipp": TimeSeries(ipp.values, ipp.dates),
             "news": TimeSeries(news.values, news.dates),
             "consumer_price": TimeSeries(consumer_price.values, consumer_price.dates),
             "interest_rate": TimeSeries(interest_rate.values, interest_rate.dates),
             "cb_monitor": TimeSeries(cb_monitor.values, cb_monitor.dates),
-            "business_clim": TimeSeries(bussines_clim.values, bussines_clim.dates),
+            "business_clim": TimeSeries(business_clim.values, business_clim.dates),
             "curs": TimeSeries(curs.values, curs.dates),
             "rzd": TimeSeries(rzd.values, rzd.dates)
         }
@@ -106,17 +108,15 @@ class IPPForecast(BaseForecast):
 
         df = pd.DataFrame({'date': []})
 
-        for feature, columns in self._raw_data.items():
+        for feature, columns in _raw_data.items():
             feature_df = pd.DataFrame({'date': columns.dates, feature: columns.values})
 
-            # приводим все даты к формату: ГОД-МЕСЯЦ-1 , чтобы их обьеденить по дате верно
-            feature_df.date = feature_df.date.apply(
-                lambda x: date(
-                    year=int(x.split('.')[2]),
-                    month=int(x.split('.')[1]),
-                    day=1
+            # Если это не дата (еще не приводили)
+            if feature != 'curs':
+                # приводим к формату: год-месяц-1 , чтобы их обьеденить по дате верно
+                feature_df.date = feature_df.date.apply(
+                    lambda x: date(year=int(x.split('.')[2]), month=int(x.split('.')[1]), day=1)
                 )
-            )
 
             df = df.merge(feature_df, on='date', how='outer')
 
@@ -135,36 +135,29 @@ class IPPForecast(BaseForecast):
         df['ipp_lag_2'] = df['ipp_lag_2'] ** 2
         df['ipp_lag_3'] = df['ipp_lag_3'] ** 2
 
-        df = df \
-            [~pd.isna(df.ipp)] \
-            .sort_values(by='date') \
-            .interpolate(method='linear') \
-            .dropna()
+        self._df = (df[~pd.isna(df.ipp)]
+                    [df.date >= self.date_start]
+                    .sort_values(by='date')
+                    .bfill()
+                    .dropna())
 
-        return IPPForecast(
-            hparams=self._args, model_1=self._model_1, model_2=self._model_2, model_3=self._model_3,
-            date_end=self.date_end, raw_data=_raw_data, df=df
-        )
+        return self
 
     def _features_filter(self, model_features: tuple):
-        return self.df.loc[:, [*model_features]]
+        return self._df.loc[:, [*model_features]]
 
     @staticmethod
-    @lru_cache(maxsize=8)
     def _train(model, X, y):
         model.fit(X=X, y=y)
-        
-        return model
-    
-    def train(self) -> "IPPForecast":
-        model_1 = self._train(self._model_1, X=self._features_filter(self.model_1_features), y=self.df['ipp'])
-        model_2 = self._train(self._model_2, X=self._features_filter(self.model_2_features), y=self.df['ipp_lag_1'])
-        model_3 = self._train(self._model_3, X=self._features_filter(self.model_3_features), y=self.df['ipp_lag_2'])
 
-        return IPPForecast(
-            hparams=self._args, model_1=model_1, model_2=model_2, model_3=model_3,
-            df=self.df, date_end=self.date_end, raw_data=self._raw_data
-        )
+        return model
+
+    def train(self) -> "IPPForecast":
+        self._model_1 = self._train(self._model_1, X=self._features_filter(self.model_1_features), y=self._df['ipp'])
+        self._model_2 = self._train(self._model_2, X=self._features_filter(self.model_2_features), y=self._df['ipp_lag_1'])
+        self._model_3 = self._train(self._model_3, X=self._features_filter(self.model_3_features), y=self._df['ipp_lag_2'])
+
+        return self
 
     @staticmethod
     def _score(model, x, y) -> ModelScore:
@@ -175,27 +168,28 @@ class IPPForecast(BaseForecast):
             r2_score=r2_score(y, predict)
         )
 
-    @staticmethod
-    @lru_cache(maxsize=8)
-    def _predict(model, data):
-        return model.predict(data)
+    def _iteration_predict(self, data):
+        return (
+            self._model_1.predict(data),
+            self._model_2.predict(data) ** 0.5,
+            self._model_3.predict(data) ** 0.5,
+        )
 
     def predict(self) -> ForecastResponse:
-        # Берем самые последние данные, получаем предсказание и score для каждой модели
+        # Берем все значения
+        x = self._df.loc[:, self.model_1_features]
 
-        data = self._features_filter(self.model_1_features).iloc[-1,]
+        # Предсказание модели предыдущих значений
+        previous = self._model_1.predict(x)
 
-        month_1 = self._predict(self._model_1, data)
-        month_2 = self._predict(self._model_2, data) ** 0.5
-        month_3 = self._predict(self._model_3, data) ** 0.5
+        # Предсказанеи последующих 3 по последнему значению
+        predict = self._iteration_predict(x.iloc[-1, ])
 
-        score_1 = self._score(self._model_1, self._features_filter(self.model_1_features), self.df.ipp)
-        score_2 = self._score(self._model_2, self._features_filter(self.model_2_features), self.df.ipp_lag_1)
-        score_3 = self._score(self._model_3, self._features_filter(self.model_3_features), self.df.ipp_lag_2)
+        # Получаем score
+        scores = [self._score(model=self._model_1, x=x, y=self._df.ipp)]
 
         return ForecastResponse(
-            month_1=month_1,
-            month_2=month_2,
-            month_3=month_3,
-            scores=list[score_1, score_2, score_3]
+            previous=previous,
+            predict=predict,
+            scores=scores
         )

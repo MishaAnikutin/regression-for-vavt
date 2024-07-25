@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
-from app.schemas.ml.params import RNNHyperparameters, CatBoostHyperparameters
-from app.schemas.ml.features import Feature, IPPFeatures
+from app.schemas.ml.params import RNNHyperparameters, CatBoostHyperparameters, NHiTSHyperparameters
+from app.schemas.ml.features import Feature, IPPFeatures, IPCFeatures
 from app.schemas.common import ConfidenceIntervalEnum
 
 
@@ -20,7 +20,7 @@ class BaseRequest(BaseModel):
     - target:              временной ряд индекса, который предсказываем
     """
 
-    hparams: RNNHyperparameters
+    hparams: NHiTSHyperparameters
     target: Feature = Field(None, description="Переменная для предсказания")
 
 
@@ -51,5 +51,4 @@ class IPCRequestCB(BaseModel):
 
     hparams: CatBoostHyperparameters
     ipc: Feature = Field(None, description="Индекс потребительских цен")
-    features: IPPFeatures
-
+    features: IPCFeatures

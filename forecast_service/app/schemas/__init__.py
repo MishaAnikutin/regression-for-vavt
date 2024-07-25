@@ -3,7 +3,6 @@ from .io.request import FeatureRequest, IPPRequestCB, BaseRequest
 
 from .ml.features import Feature, IPPFeatures
 from .ml.params import BaseHyperparameters, RNNHyperparameters, CatBoostHyperparameters
-
 from .ml.scores import ModelScore
 
 from .common import ConfidenceIntervalEnum, ReadyOnModels
@@ -17,6 +16,9 @@ IndexFeaturesMapper = {
 
 
 __all__ = [
+    'IPCFeaturesResponse',
+    'IPPFeaturesResponse',
+
     'BaseRequest',
     'IPPRequestCB',
     'ForecastResponse',

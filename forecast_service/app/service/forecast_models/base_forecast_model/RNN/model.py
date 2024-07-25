@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from datetime import date
-from functools import lru_cache
 from typing import Iterable
 
 from keras.src import Sequential
@@ -23,7 +22,6 @@ IData = list[int]
 class BaseForecastService(BaseForecast):
     """Сервис для прогноза временных рядов с помощью рекурентных нейронных сетей"""
     
-    forecast_horizon = 1
     last_day = date(year=2015, month=1, day=1)
     
     def __init__(
@@ -49,10 +47,10 @@ class BaseForecastService(BaseForecast):
         model.add(Dropout(0.1))
 
         # Прогноз всегда на 1 месяц. На 2 и 3 будут итерационно
-        model.add(Dense(units=self.forecast_horizon, activation='linear'))
+        model.add(Dense(units=1, activation='linear'))
 
         model.compile(
-            optimizer=Adam(learning_rate=0.001),
+            optimizer=Adam(learning_rate=self._hparams.learning_rate),
             loss='mean_squared_error',
             metrics=[MeanAbsolutePercentageError()]
         )
@@ -68,9 +66,7 @@ class BaseForecastService(BaseForecast):
         # сделаем даты из строк в datetime.date
         self._df.date = pd.to_datetime(self._df.date, format='%d.%m.%Y').dt.date
 
-        # Очищаем данные с критической точки (обычно начало 2015 года) и сортируем по дате
-        # Важно чтобы первые значения были ~2015 а последние уже наши дни
-        # self._df = self._df[self._df.date > self.last_day].sort_values(by='date')
+        # сортируем по дате так, чтобы последние значения были наши дни
         self._df = self._df.sort_values(by='date')
 
         # создаем скалер
@@ -83,19 +79,27 @@ class BaseForecastService(BaseForecast):
     
     def _reshape_data_to_model(self, data: Iterable) -> tuple[np.array, np.array]:
         # создаем период времени, начиная с lookback (на сколько назад смотрим) до конца, без длины прогноза
-        data_range = range(self._hparams.lookback, len(data) - self.forecast_horizon)
+        data_range = range(self._hparams.lookback, len(data) - 1)
 
         x = np.array([data[i - self._hparams.lookback:i] for i in data_range])
         x = np.reshape(x, (x.shape[0], self._hparams.lookback, 1))
 
-        y = np.array([data[i:i + self.forecast_horizon] for i in data_range])
+        y = np.array([data[i:i + 1] for i in data_range])
 
         return x, y
+
+    @staticmethod
+    def _train_test_split(x, y):
+        n_last = 36
+        x_train, x_test = x[:-n_last], x[-n_last:]
+        y_train, y_test = y[:-n_last], y[-n_last:]
+
+        return x_train, x_test, y_train, y_test
 
     def _train(self, model, batch_size, epochs):
         x, y = self._reshape_data_to_model(self._df['z_goal'])
         
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=1)
+        x_train, x_test, y_train, y_test = self._train_test_split(x, y)
 
         model.fit(
             x_train,
@@ -113,15 +117,16 @@ class BaseForecastService(BaseForecast):
                 
         return self
     
-    @staticmethod
-    def _score(model, x, y) -> ModelScore:
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=1)
-        
-        y_pred = model.predict(x_test)
+    def _score(self) -> ModelScore:
+        x, y = self._reshape_data_to_model(self._df['z_goal'])
+
+        x_train, x_test, y_train, y_test = self._train_test_split(x, y)
+
+        y_prediction = self._model.predict(x_test)
 
         return ModelScore(
-            mape=mean_absolute_percentage_error(y_test, y_pred),
-            r2_score=r2_score(y_test, y_pred)
+            mape=mean_absolute_percentage_error(y_test, y_prediction),
+            r2_score=r2_score(y_test, y_prediction)
         )
 
     @staticmethod
@@ -148,8 +153,7 @@ class BaseForecastService(BaseForecast):
         predictions = list()
         new_x_list = [x]
 
-        # делаем прогноз на 3 дня
-        for _ in range(3):
+        for _ in range(self._hparams.horizon):
 
             x = new_x_list[-1]
             y = None if len(predictions) == 0 else predictions[-1]
@@ -166,12 +170,13 @@ class BaseForecastService(BaseForecast):
         previous = list(self._scaler.inverse_transform((self._model.predict(self._df.z_goal[self._hparams.lookback:]))))
 
         # Предсказанеи последующих 3
-        month_1, month_2, month_3 = self._scaler.inverse_transform(self._iteration_predict(self._model, self._df.z_goal))
+        predict = self._scaler.inverse_transform(self._iteration_predict(self._model, self._df.z_goal))
+
+        # Получаем score
+        scores = []
 
         return ForecastResponse(
             previous=previous,
-            month_1=month_1,
-            month_2=month_2,
-            month_3=month_3,
-            scores=[]
+            predict=predict,
+            scores=scores
         )

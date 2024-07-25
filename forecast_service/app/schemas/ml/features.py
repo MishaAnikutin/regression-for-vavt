@@ -17,10 +17,7 @@ class IPPFeatures(BaseModel):
 
 
 class IPCFeatures(BaseModel):
-    news:           Feature = Field(None, description="Новостной идекс ЦБ, Россия")
-    cb_monitor:     Feature = Field(None, description="Оценка изменения спроса на продукцию, товары, услуги (промышленность), пункты, Россия")
-    business_clim:  Feature = Field(None, description="Промышленность Индикатор бизнес-климата Банка России")
+    money_supply: Feature = Field(None, description="Денежная масса РФ")
+    agg_m0: Feature = Field(None, description="Денежный аггрегат M0")
     interest_rate:  Feature = Field(None, description="Ключевая ставка ")
-    rzd:            Feature = Field(None, description="Погрузка на сети РЖД")
-    consumer_price: Feature = Field(None, description="Индекс цен на электроэнергию в первой ценовой зоне")
     curs:           Feature = Field(None, description="Курс рубля к доллару США")
