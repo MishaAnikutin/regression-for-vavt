@@ -3,16 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from app.api.v1 import router_v1
+from app.cache import lifespan
 
 from . import config
 
-"""Запуск API Для прогнозного сервиса"""
 
 forecast_service = FastAPI(
     title="iep-forecast-service",
     description="Сервис для прогноза макроиндексов",
     version="1.0",
-    root_path=config.APP_NGINX_PREFIX
+    root_path=config.APP_NGINX_PREFIX,
+    lifespan=lifespan
 )
 
 forecast_service.add_middleware(
