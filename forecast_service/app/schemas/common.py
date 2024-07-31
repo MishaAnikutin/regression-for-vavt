@@ -14,5 +14,4 @@ class ReadyOnModels(str, Enum):
 
     ipp = 'ipp'
     ipc = 'ipc'
-
-
+    ort = 'ort'

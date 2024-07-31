@@ -8,10 +8,6 @@ from app.domain.forecast_interface import BaseForecast
 from app.schemas import Feature, ForecastResponse, ModelScore, CatBoostHyperparameters
 
 
-FData = list[float]
-IData = list[int]
-
-
 class IPCForecast(BaseForecast):
     """
     Модель прогноза Индекса промышленного производства на CatBoost
@@ -108,8 +104,6 @@ class IPCForecast(BaseForecast):
             df = df.merge(feature_df, on='date', how='outer')
 
         df.date = pd.to_datetime(df.date, format='%d.%m.%Y').dt.date
-
-        df.to_csv('tmp.csv')
 
         # столбцы динамически меняются, поэтому сохраняем и приводим к неизменяемому типу
         features = tuple(df.columns)

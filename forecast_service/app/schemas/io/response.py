@@ -34,4 +34,21 @@ class IPCFeaturesResponse(BaseModel):
         m0_agg:         FeatureResponse = FeatureResponse(description="Денежный аггрегат М0, Россия", dataset_uuid='None')
 
 
-FeaturesResponse: TypeAlias = Union[IPCFeaturesResponse, IPPFeaturesResponse]
+class ORTFeaturesResponse(BaseModel):
+    news: FeatureResponse = FeatureResponse(
+        description="Новостной индекс ЦБ, Россия",
+        dataset_uuid="423f7092-d29b-43da-8209-f100c1fc88cd"
+    )
+
+    salary: FeatureResponse = FeatureResponse(
+        description="Реальная зачисленная заработная плата работников организации. В % к соответствующему периоду предыдущего года",
+        dataset_uuid="9c2cdc12-ba9d-4d61-b3fe-18c30f63dabd"
+    )
+
+    business_clim: FeatureResponse = FeatureResponse(
+        description="Индикатор бизнес-климата ЦБ (промышленность), пункты, Россия",
+        dataset_uuid="14c74eba-c1a7-4aff-a1e3-0aa473ce8062"
+    )
+
+
+FeaturesResponse: TypeAlias = Union[IPCFeaturesResponse, IPPFeaturesResponse, ORTFeaturesResponse]

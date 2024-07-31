@@ -11,10 +11,6 @@ from app.domain.forecast_interface import BaseForecast
 from app.schemas import Feature, ForecastResponse, ModelScore, CatBoostHyperparameters
 
 
-FData = list[float]
-IData = list[int]
-
-
 class IPPForecast(BaseForecast):
     """
     Модель прогноза Индекса промышленного производства на CatBoost

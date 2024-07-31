@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from fastapi_cache.decorator import cache
 
-from app.service.forecast_models import IPCForecast, IPPForecast, BaseForecastService
+from app.schemas.io.request import ORTRequestCB
+from app.service.forecast_models import IPCForecast, IPPForecast, BaseForecastService, ORTForecast
 from app.schemas import (IndexFeaturesMapper, ForecastResponse, FeaturesResponse,
                          IPPRequestCB, BaseRequest, ReadyOnModels, IPCRequestCB)
 
@@ -91,6 +92,35 @@ async def cb_ipc_forecast(request: IPCRequestCB) -> ForecastResponse:
                 interest_rate=request.features.interest_rate,
                 money_supply=request.features.money_supply,
                 agg_m0=request.features.agg_m0
+            )
+            .preprocess_features()
+            .train()
+            .predict())
+
+
+@forecast_router.get("/ort/catboost")
+@cache(namespace="make_forecast", expire=3600)
+async def cb_ort_forecast(request: ORTRequestCB) -> ForecastResponse:
+    """
+    # Прогнозирование оборота розничной торговли с CatBoost
+
+    ## Параметры:
+    - __hparams:__ гиперпараметры CatBoost
+    - __ipc:__ временной ряд индекса ОРТ
+    - __features:__ список временных рядов признаков индекса
+
+    _Подробнее в описании DTO внизу страницы_
+
+    ## Возвращает:
+    ForecastResponse
+    """
+
+    return (ORTForecast(request.hparams)
+            .set_data(
+                ort=request.ort,
+                salary=request.features.salary,
+                business_clim=request.features.business_clim,
+                news=request.features.news
             )
             .preprocess_features()
             .train()

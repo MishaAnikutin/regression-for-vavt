@@ -21,3 +21,9 @@ class IPCFeatures(BaseModel):
     agg_m0: Feature = Field(None, description="Денежный аггрегат M0")
     interest_rate:  Feature = Field(None, description="Ключевая ставка ")
     curs:           Feature = Field(None, description="Курс рубля к доллару США")
+
+
+class ORTFeatures(BaseModel):
+    news: Feature = Field(None, description="Новостной индекс ЦБ, Россия")
+    salary: Feature = Field(None, description="Реальная зачисленная заработная плата работников организации. В % к соответствующему периоду предыдущего года")
+    business_clim: Feature = Field(None, description="Промышленность Индикатор бизнес-климата Банка России")

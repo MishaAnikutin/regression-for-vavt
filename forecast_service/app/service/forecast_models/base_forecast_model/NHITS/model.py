@@ -1,7 +1,5 @@
-import numpy as np
 import pandas as pd
 from datetime import date
-from typing import Iterable
 
 from neuralforecast import NeuralForecast
 from neuralforecast.losses.pytorch import MSE
@@ -9,15 +7,9 @@ from neuralforecast.models import NHITS
 from utilsforecast.losses import mape, rmse
 from utilsforecast.evaluation import evaluate
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_percentage_error, r2_score
-
 from app.domain.forecast_interface import BaseForecast
-from app.schemas import RNNHyperparameters, Feature, ForecastResponse, ModelScore
+from app.schemas import Feature, ForecastResponse, ModelScore
 from app.schemas.ml.params import NHiTSHyperparameters
-
-FData = list[float]
-IData = list[int]
 
 
 class BaseForecastService(BaseForecast):

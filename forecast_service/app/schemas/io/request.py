@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from app.schemas.ml.params import RNNHyperparameters, CatBoostHyperparameters, NHiTSHyperparameters
-from app.schemas.ml.features import Feature, IPPFeatures, IPCFeatures
+from app.schemas.ml.features import Feature, IPPFeatures, IPCFeatures, ORTFeatures
 from app.schemas.common import ConfidenceIntervalEnum
 
 
@@ -52,3 +52,18 @@ class IPCRequestCB(BaseModel):
     hparams: CatBoostHyperparameters
     ipc: Feature = Field(None, description="Индекс потребительских цен")
     features: IPCFeatures
+
+
+class ORTRequestCB(BaseModel):
+    """
+    DTO для запроса на прогноз индекса потребительских цен на CatBoost Regressor
+
+    Параметры:
+    - hparams:             гиперпараметры CatBoost
+    - ipc:                 временной ряд индекса, который предсказываем (ИПЦ)
+    - features:            временные ряды признаков индекса
+    """
+
+    hparams: CatBoostHyperparameters
+    ort: Feature = Field(None, description="Оборот розничной торговли, Россия. Ежемесячные данные. Всего. В % к соответствующему периоду предыдущего года")
+    features: ORTFeatures
