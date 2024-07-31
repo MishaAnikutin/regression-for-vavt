@@ -5,40 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e214c506-38f1-4858-89e1-cef55adb984f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/service/forecast_models/ort/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/service/forecast_models/ort/catboost_model.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../data/.~lock.ipp_factors.xlsx#" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../data/preprocessed_ipp_factors.csv" beforeDir="false" afterPath="$PROJECT_DIR$/../data/preprocessed_ipp_factors.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/handlers/make_forecast.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/handlers/make_forecast.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/common.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/common.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/io/request.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/io/request.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/io/response.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/io/response.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/ml/features.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/ml/features.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/service/forecast_models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/service/forecast_models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/service/forecast_models/base_forecast_model/NHITS/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/service/forecast_models/base_forecast_model/NHITS/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/service/forecast_models/ipc/catboost_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/service/forecast_models/ipc/catboost_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/service/forecast_models/ipp/catboost_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/service/forecast_models/ipp/catboost_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/Пример работы с базовой моделью.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/examples/Пример работы с базовой моделью.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/catboost_info/catboost_training.json" beforeDir="false" afterPath="$PROJECT_DIR$/../research/catboost_info/catboost_training.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/catboost_info/learn/events.out.tfevents" beforeDir="false" afterPath="$PROJECT_DIR$/../research/catboost_info/learn/events.out.tfevents" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/catboost_info/learn_error.tsv" beforeDir="false" afterPath="$PROJECT_DIR$/../research/catboost_info/learn_error.tsv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/catboost_info/test/events.out.tfevents" beforeDir="false" afterPath="$PROJECT_DIR$/../research/catboost_info/test/events.out.tfevents" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/catboost_info/test_error.tsv" beforeDir="false" afterPath="$PROJECT_DIR$/../research/catboost_info/test_error.tsv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/catboost_info/time_left.tsv" beforeDir="false" afterPath="$PROJECT_DIR$/../research/catboost_info/time_left.tsv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/test.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/Базовая модель RNN GRU + LSTM.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../research/Базовая модель RNN GRU + LSTM.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/Базовая модель RNN GRU.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/Индекс потребительских цен + Catboost.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../research/Индекс потребительских цен + Catboost.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/Индекс потребительских цен, Россия — Диаграмма.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/Индекс промышленного производства + CatBoost.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../research/Индекс промышленного производства + CatBoost.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/Оборот розничной торговли + CatBoost.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../research/Оборот розничной торговли + CatBoost.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/Тестирую другие технологии.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../research/Тестирую другие технологии.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/данные для исследований/Ежемесячный экспорт, млн долларов США, Россия — Диаграмма.csv" beforeDir="false" afterPath="$PROJECT_DIR$/../research/данные для исследований/Ежемесячный экспорт, млн долларов США, Россия — Диаграмма.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/данные для исследований/Объем вкладов (депозитов) и прочих привлеченных средств физических лиц, Россия — Диаграмма (1).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../research/данные для исследований/оборот_розничной_торговли_факторы.csv" beforeDir="false" afterPath="$PROJECT_DIR$/../research/данные для исследований/оборот_розничной_торговли_факторы.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/ml/params.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/ml/params.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

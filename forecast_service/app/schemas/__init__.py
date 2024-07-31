@@ -15,4 +15,3 @@ IndexFeaturesMapper = {
     ReadyOnModels.ipc: IPCFeaturesResponse(),
     ReadyOnModels.ort: ORTFeaturesResponse()
 }
-

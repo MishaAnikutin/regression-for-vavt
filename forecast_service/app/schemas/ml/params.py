@@ -1,6 +1,6 @@
 from typing import Union, TypeAlias
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, conint, confloat
 
 
 class CatBoostHyperparameters(BaseModel):
@@ -25,10 +25,10 @@ class RNNHyperparameters(BaseModel):
 class NHiTSHyperparameters(BaseModel):
     """Базовая модель для RNN"""
 
-    lookback: int = Field(default=6, description="Сколько берем данных для прогноза")
-    horizon: int = Field(default=3, description="На сколько прогнозируем")
-    epochs: int = Field(default=100, description="Количество эпох обучения")
-    learning_rate: float = Field(default=0.0001, description="Шаг обучения")
+    lookback: conint(gt=0, lt=500) = Field(default=6, description="Сколько берем данных для прогноза")
+    horizon: conint(gt=0, lt=6) = Field(default=3, description="На сколько прогнозируем")
+    epochs: conint(gt=0, lt=500) = Field(default=100, description="Количество эпох обучения")
+    learning_rate: confloat(gt=0, lt=1) = Field(default=0.0001, description="Шаг обучения")
 
 
 BaseHyperparameters: TypeAlias = Union[RNNHyperparameters, CatBoostHyperparameters, NHiTSHyperparameters]
