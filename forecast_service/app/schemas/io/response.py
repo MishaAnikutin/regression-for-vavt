@@ -31,7 +31,7 @@ class IPCFeaturesResponse(BaseModel):
         interest_rate:  FeatureResponse = FeatureResponse(description="Базовая ставка - краткосрочная, %, Россия", dataset_uuid="87d93650-33f7-44b2-96df-6d520fa76c12")
         curs:           FeatureResponse = FeatureResponse(description="Официальный курс доллара США на заданную дату, устанавливаемый ежедневно", dataset_uuid="5e5ac82a-ab76-4567-b095-92f8064acb51")
         money_supply:   FeatureResponse = FeatureResponse(description="Денежная масса, млрд нац ден ед, Россия", dataset_uuid='92b26933-97ab-45ab-9d52-18f509e193cb')
-        m0_agg:         FeatureResponse = FeatureResponse(description="Денежный аггрегат М0, Россия", dataset_uuid='None')
+        m0_agg:         FeatureResponse = FeatureResponse(description="Денежный аггрегат М0, Россия", dataset_uuid='8aa737a8-1f02-465d-b64b-a60b2a077873')
 
 
 class ORTFeaturesResponse(BaseModel):

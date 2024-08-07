@@ -127,16 +127,10 @@ class IPCForecast(BaseForecast):
     def _features_filter(self, model_features: tuple):
         return self._df.loc[:, [*model_features]]
 
-    @staticmethod
-    def _train(model, X, y):
-        model.fit(X=X, y=y)
-
-        return model
-
     def train(self) -> "IPCForecast":
-        self._model_1 = self._train(self._model_1, X=self._features_filter(self.model_1_features), y=self._df['ipc'])
-        self._model_2 = self._train(self._model_2, X=self._features_filter(self.model_2_features), y=self._df['ipc_lag_1'])
-        self._model_3 = self._train(self._model_3, X=self._features_filter(self.model_3_features), y=self._df['ipc_lag_2'])
+        self._model_1.fit(X=self._features_filter(self.model_1_features), y=self._df['ipc'])
+        self._model_2.fit(X=self._features_filter(self.model_2_features), y=self._df['ipc_lag_1'])
+        self._model_3.fit(X=self._features_filter(self.model_3_features), y=self._df['ipc_lag_2'])
 
         return self
 

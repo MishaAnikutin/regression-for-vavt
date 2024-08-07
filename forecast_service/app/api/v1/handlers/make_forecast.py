@@ -21,7 +21,7 @@ async def features_list(index: ReadyOnModels) -> FeaturesResponse:
 
 
 @forecast_router.get("/base")
-@cache(expire=3600)
+@cache(namespace="make_forecast", expire=3600)
 async def base_forecast(request: BaseRequest) -> ForecastResponse:
     """# Базовая модель для прогноза"""
 

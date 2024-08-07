@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
-from app.schemas.ml.params import RNNHyperparameters, CatBoostHyperparameters, NHiTSHyperparameters
+
+from app.schemas.ml.params import CatBoostHyperparameters, NHiTSHyperparameters
 from app.schemas.ml.features import Feature, IPPFeatures, IPCFeatures, ORTFeatures
-from app.schemas.common import ConfidenceIntervalEnum
 
 
 class FeatureRequest(BaseModel):
@@ -13,7 +13,7 @@ class FeatureRequest(BaseModel):
 
 class BaseRequest(BaseModel):
     """
-    DTO для базового запроса на прогноз временного ряда с помощью рекурентных нейронных сетей в архитектуре LSTM
+    DTO для базового запроса на прогноз временного ряда c помощью модели NHiTS
 
     Параметры:
     - hparams:             гиперпараметры модели
