@@ -146,8 +146,8 @@ class IPCForecast(BaseForecast):
     def _iteration_predict(self, data):
         return (
             self._model_1.predict(data),
-            self._model_2.predict(data) ** 0.5,
-            self._model_3.predict(data) ** 0.5,
+            self._model_2.predict(data),
+            self._model_3.predict(data),
         )
 
     def predict(self) -> ForecastResponse:

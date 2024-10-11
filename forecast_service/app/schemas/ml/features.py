@@ -17,8 +17,8 @@ class IPPFeatures(BaseModel):
 
 
 class IPCFeatures(BaseModel):
-    money_supply: Feature = Field(None, description="Денежная масса РФ")
-    agg_m0: Feature = Field(None, description="Денежный аггрегат M0")
+    money_supply:   Feature = Field(None, description="Денежная масса РФ")
+    agg_m0:         Feature = Field(None, description="Денежный аггрегат M0")
     interest_rate:  Feature = Field(None, description="Ключевая ставка ")
     curs:           Feature = Field(None, description="Курс рубля к доллару США")
 
