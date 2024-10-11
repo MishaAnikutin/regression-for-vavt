@@ -10,7 +10,7 @@ from app.schemas import (IndexFeaturesMapper, ForecastResponse, FeaturesResponse
 forecast_router = APIRouter()
 
 
-@forecast_router.post("/{index}/features_list")
+@forecast_router.get("/{index}/features_list")
 async def features_list(index: ReadyOnModels) -> FeaturesResponse:
     """# Получить список названий всех признаков необходимых для обучения модели"""
 
