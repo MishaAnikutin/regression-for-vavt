@@ -10,9 +10,7 @@
       <change beforePath="$PROJECT_DIR$/../data/preprocessed_ipp_factors.csv" beforeDir="false" afterPath="$PROJECT_DIR$/../data/preprocessed_ipp_factors.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/handlers/make_forecast.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/handlers/make_forecast.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/io/request.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/io/request.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/service/data_preprocess/preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/service/data_preprocess/preprocess.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/service/forecast_models/ipc/catboost_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/service/forecast_models/ipc/catboost_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../research/Индекс промышленного производства + CatBoost.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../research/Индекс промышленного производства + CatBoost.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../research/данные для исследований/Инвестиции в основной капитал, Россия #duplicate — Диаграмма.csv" beforeDir="false" afterPath="$PROJECT_DIR$/../research/данные для исследований/Инвестиции в основной капитал, Россия #duplicate — Диаграмма.csv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -46,7 +44,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "/home/misha/Desktop/Programming/Python programming/broker-backend-example"
+    "last_opened_file_path": "/home/misha/Desktop/work/iep/regression-for-vavt/forecast_service"
   }
 }]]></component>
   <component name="RecentsManager">

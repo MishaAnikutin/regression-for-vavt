@@ -10,17 +10,17 @@ from app.schemas import (IndexFeaturesMapper, ForecastResponse, FeaturesResponse
 forecast_router = APIRouter()
 
 
-@forecast_router.get("/{index}/features_list")
+@forecast_router.post("/{index}/features_list")
 async def features_list(index: ReadyOnModels) -> FeaturesResponse:
     """# Получить список названий всех признаков необходимых для обучения модели"""
 
-    try:
+    if index in IndexFeaturesMapper.keys():
         return IndexFeaturesMapper[index]
-    except KeyError:
-        raise HTTPException(status_code=404, detail='Такого индекса нет')
+
+    raise HTTPException(status_code=404, detail='Такого индекса нет')
 
 
-@forecast_router.get("/base")
+@forecast_router.post("/base")
 @cache(namespace="make_forecast", expire=3600)
 async def base_forecast(request: BaseRequest) -> ForecastResponse:
     """# Базовая модель для прогноза"""
@@ -32,7 +32,7 @@ async def base_forecast(request: BaseRequest) -> ForecastResponse:
             .predict())
 
 
-@forecast_router.get("/ipp/catboost/")
+@forecast_router.post("/ipp/catboost/")
 @cache(namespace="make_forecast", expire=3600)
 async def cb_ipp_forecast(request: IPPRequestCB) -> ForecastResponse:
     """
@@ -68,7 +68,7 @@ async def cb_ipp_forecast(request: IPPRequestCB) -> ForecastResponse:
             .predict())
 
 
-@forecast_router.get("/ipc/catboost")
+@forecast_router.post("/ipc/catboost")
 @cache(namespace="make_forecast", expire=3600)
 async def cb_ipc_forecast(request: IPCRequestCB) -> ForecastResponse:
     """
@@ -98,7 +98,7 @@ async def cb_ipc_forecast(request: IPCRequestCB) -> ForecastResponse:
             .predict())
 
 
-@forecast_router.get("/ort/catboost")
+@forecast_router.post("/ort/catboost")
 @cache(namespace="make_forecast", expire=3600)
 async def cb_ort_forecast(request: ORTRequestCB) -> ForecastResponse:
     """
