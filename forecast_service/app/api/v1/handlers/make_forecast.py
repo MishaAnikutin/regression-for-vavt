@@ -32,7 +32,7 @@ async def base_forecast(request: BaseRequest) -> ForecastResponse:
             .predict())
 
 
-@forecast_router.post("/ipp/catboost/")
+@forecast_router.post("/ipp/catboost")
 @cache(namespace="make_forecast", expire=3600)
 async def cb_ipp_forecast(request: IPPRequestCB) -> ForecastResponse:
     """
