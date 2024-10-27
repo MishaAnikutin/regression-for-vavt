@@ -1,3 +1,4 @@
+import torch
 import pandas as pd
 from datetime import date
 
@@ -25,17 +26,25 @@ class BaseForecastService(BaseForecast):
         self._hparams = hparams
         self._model = self._init_model()
 
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
     def _init_model(self):
-        return NeuralForecast(models=[
+        model = NeuralForecast(models=[
             NHITS(
                 h=self._hparams.horizon,
                 input_size=self._hparams.lookback,
                 max_steps=self._hparams.epochs,
                 scaler_type='standard',
                 loss=MSE(),
-                learning_rate=self._hparams.learning_rate
+                learning_rate=self._hparams.learning_rate,
+                n_freq_downsample=[2, 1, 1],
+                mlp_units=3 * [[2, 2]]
             )
         ], freq='M')
+
+        # model.to(self.device)
+
+        return model
 
     def set_data(self, target_data: Feature) -> "BaseForecastService":
         shape = len(target_data.dates)
@@ -52,6 +61,9 @@ class BaseForecastService(BaseForecast):
         return self
 
     def train(self) -> "BaseForecastService":
+        if torch.cuda.is_available():
+            self._df['y'] = self._df['y'].to(self.device)
+
         # размер валидационной выборки 12
         self._model.fit(df=self._df, val_size=12)
 
